@@ -1,0 +1,36 @@
+# PyTorch
+torch==2.3.1
+
+# Hugging Face Ecosystem
+transformers==4.48.3
+tokenizers==0.21.4
+accelerate==0.32.1
+safetensors==0.8.0
+huggingface_hub==0.36.2
+datasets==2.20.0
+peft==0.11.1
+bitsandbytes>=0.43.0
+
+# Text Processing & Formats
+sentencepiece==0.2.0
+protobuf==5.27.2
+pyyaml==6.0.1
+
+# Utilities and Notebooks
+numpy==1.26.4
+pandas==2.2.2
+scikit-learn==1.5.1
+tqdm==4.66.4
+ipykernel==6.29.5
+jupyter==1.0.0
+
+# Inference server dependencies
+fastapi==0.109.0
+uvicorn==0.22.0
+pydantic==2.8.0
+python-multipart==0.0.6
+omegaconf>=2.3.0
+pydantic-settings>=2.0.0
+llama-cpp-python
+
+

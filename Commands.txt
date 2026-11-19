@@ -1,0 +1,103 @@
+Olmo Experiments Command Reference
+
+1. Create Python virtual environment
+   uv venv .venv
+   .venv\Scripts\activate
+   Description: Create and activate the local Python environment for this project using UV (blazing fast).
+
+2. Install dependencies
+   uv pip install -r requirements.txt --native-tls
+   Description: Install the pinned Python packages required by the project using UV. Use --native-tls if on a restricted network.
+
+
+3. Download model weights
+   python -m src.download --repo-id allenai/OLMo-2-0425-1B --output-dir artifacts/OLMo-2-0425-1B
+   Description: Download the OLMo-2 1B checkpoint from Hugging Face into local artifacts.
+
+4. Convert checkpoint precision to FP16
+   python -m src.convert --input-dir artifacts/OLMo-2-0425-1B --output-dir artifacts/OLMo-2-0425-1B-FP16
+   Description: Convert the source weights into an FP16 artifact for inference.
+
+5. Run inference with a prompt
+   python -m src.inference --config configs/inference_fp16.yaml --prompt "Explain quantum computing in one sentence:"
+   Description: Run a single generation request using the FP16 inference config.
+
+6. Chat-style inference with system/user messages
+   python -m src.inference --config configs/inference_fp16.yaml --system "You are a helpful assistant." --user "Summarize the difference between FP16 and BF16."
+   Description: Run a chat-style prompt without writing a script.
+
+7. Chat-style inference with multiple message roles
+   python -m src.inference --config configs/inference_fp16.yaml --message "system:You are a helpful assistant." --message "user:Please list three advantages of half-precision inference." --message "assistant:Sure, here are the benefits so far." --message "user:Now compare FP16 and BF16 performance."
+   Description: Send a multi-turn message sequence to the model.
+
+8. Chat-style inference from JSON message file
+   python -m src.inference --config configs/inference_fp16.yaml --messages-json messages.json
+   Description: Load the prompt and roles from a JSON file instead of CLI arguments.
+
+9. Override max generated tokens
+   python -m src.inference --config configs/inference_fp16.yaml --prompt "A quick test for the model." --max-new-tokens 4086 --log-file data/processed/inference_large_response.jsonl
+   Description: Force a large output token count for testing max-response behavior.
+
+10. Save inference logs in JSONL format
+    python -m src.inference --config configs/inference_fp16.yaml --prompt "A quick test for the model." --log-file data/processed/inference_logs.jsonl --log-format jsonl
+    Description: Append detailed runtime and token metrics to a JSON Lines log file.
+
+11. Save inference logs in JSON array format
+    python -m src.inference --config configs/inference_fp16.yaml --prompt "A quick test for the model." --max-new-tokens 4086 --log-file data/processed/inference_large_response.json --log-format json
+    Description: Write a valid JSON array file with detailed inference logs.
+
+12. Evaluate model performance for one artifact
+    python -m src.evaluate --model-path artifacts/OLMo-2-0425-1B-FP16
+    Description: Compute perplexity, TTFT, throughput, and peak memory for the specified model path.
+
+13. Evaluate FP16 and BF16 only
+    python -m src.evaluate --evaluate-all --precision-mode half --output-json data/processed/eval_half_precisions.json
+    Description: Run benchmarks for the half-precision inference configs only.
+
+14. Evaluate all precisions
+    python -m src.evaluate --evaluate-all --precision-mode all --output-json data/processed/eval_all_precisions.json
+    Description: Run benchmarks for FP32, FP16, and BF16 configs.
+
+15. Evaluate custom inference configs
+    python -m src.evaluate --config-list configs/inference_fp16.yaml configs/inference_bf16.yaml
+    Description: Benchmark a custom set of configuration files.
+
+16. Inference with timestamped log file (auto)
+   python -m src.inference --config configs/inference_fp16.yaml --prompt "A quick test for the model." --log-file data/processed/inference.jsonl
+   Description: Appends an inference log line to a timestamped file. The filename will be written as
+   `data/processed/inference_YYYYMMDD_HHMMSS.jsonl` (timestamp auto-inserted).
+
+17. Inference with explicit timestamp placeholder
+   python -m src.inference --config configs/inference_fp16.yaml --prompt "A quick test for the model." --log-file data/processed/inference_{timestamp}.jsonl
+   Description: Use the `{timestamp}` token in the filename to control where the timestamp is placed.
+
+18. Evaluation output as JSONL with timestamped file
+   python -m src.evaluate --evaluate-all --output-json data/processed/eval_results.jsonl
+   Description: Appends each evaluation result as a JSON object (one-per-line) into a timestamped file like
+   `data/processed/eval_results_YYYYMMDD_HHMMSS.jsonl`.
+
+19. Convert legacy JSON array to JSONL (quick CLI)
+   python -c "import json; arr=json.load(open('data/processed/eval_all_precisions.json')); f=open('data/processed/eval_all_precisions.jsonl','a'); [f.write(json.dumps(x,ensure_ascii=False)+'\\n') for x in arr]; f.close()"
+   Description: Convert an existing JSON array file into newline-delimited JSON entries.
+
+20. Run inference with dynamic config overrides (OmegaConf)
+    python -m src.inference --config configs/inference_fp16.yaml --prompt "A quick test." generation.temperature=0.99 generation.max_new_tokens=64 model.attn_implementation=eager
+    Description: Use dot-notation keys at the end of any CLI run to override configuration options dynamically without changing the physical YAML files.
+
+21. Run inference server (FastAPI / Uvicorn)
+    python -m uvicorn app.server:app --host 0.0.0.0 --port 8000 --workers 1
+    Description: Launch the FastAPI inference server listening on all network interfaces.
+
+22. Run client inference against network API server
+    python -m app.client --server http://192.168.7.112:8000 --prompt "What is quantum computing?"
+    Description: Query the remote or local API server from any machine on your LAN.
+
+23. Convert Safetensors to Quantized GGUF (Q4_K_M)
+    python -m src.convert_gguf --model-path artifacts/OLMo-2-0425-1B --output-path artifacts/OLMo-2-0425-1B-Instruct-Q4_K_M.gguf --llama-cpp-dir C:\path\to\llama.cpp
+    Description: Convert HF weights to GGUF format and quantize to 4-bit using local llama.cpp tools.
+
+24. Run GGUF Q4_K_M inference
+    python -m src.inference --config configs/inference_gguf.yaml --prompt "Testing GGUF pipeline:"
+    Description: Run inference using the quantized GGUF backend for low-memory/high-speed execution.
+
+
